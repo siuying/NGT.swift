@@ -27,10 +27,14 @@ let package = Package(
             cSettings: [
                 .headerSearchPath("../../vendor/openmp/include"),
                 .headerSearchPath("lib"),
+                .headerSearchPath("extra_include"),
+                .unsafeFlags(["-DNGT_QBG_DISABLED=1"]) // disable NGT with Quantization
             ],
             cxxSettings: [
                 .headerSearchPath("../../vendor/openmp/include"),
                 .headerSearchPath("lib"),
+                .headerSearchPath("extra_include"),
+                .unsafeFlags(["-DNGT_QBG_DISABLED=1"]) // disable NGT with Quantization
             ],
             linkerSettings: [
                 .unsafeFlags(["-Lvendor/openmp/lib", "-lomp"], .when(platforms: [.macOS], configuration: .release)),
