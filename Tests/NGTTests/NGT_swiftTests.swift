@@ -1,5 +1,5 @@
 import XCTest
-@testable import NGT_swift
+@testable import NGT
 
 final class NGT_swiftTests: XCTestCase {
     func testExample() throws {
