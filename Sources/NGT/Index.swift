@@ -36,7 +36,7 @@ public class Index {
     private var error: NGTError!
     public let path: String?
 
-    public init(dimensions: Int32?, path: String? = nil, edgeSizeForCreation: Int, edgeSizeForSearch: Int, objectType: ObjectType, distanceType: DistanceType) {
+    public init(dimensions: Int32?, path: String? = nil, edgeSizeForCreation: Int = 10, edgeSizeForSearch: Int = 40, objectType: ObjectType = .float, distanceType: DistanceType = .l2) {
         let error = ngt_create_error_object()
 
         if let path = path, dimensions == nil {
@@ -140,23 +140,27 @@ public class Index {
         }
     }
 
-    public func batchInsert(_ values: [[Float]], threads: Int) -> Bool {
-        guard let count = values.first?.count else { fatalError() }
+    public func batchInsert(_ values: [[Double]], numOfThreads: UInt32 = 1) -> [ObjectId] {
+        let count = values.count
         var ids: [UInt32] = Array(repeating: 0, count: values.count)
-        var values = values.flatMap { $0 } // flatten array
-        return ids.withUnsafeMutableBufferPointer { idsPointer in
-            return values.withUnsafeMutableBufferPointer { bufferPointer in
-                ngt_batch_insert_index(index, bufferPointer.baseAddress, UInt32(count), idsPointer.baseAddress, error)
+        var values: [Float] = values.flatMap { $0 }.map { Float($0) } // flatten array
+        _ = ids.withUnsafeMutableBufferPointer { idsPointer in
+            return values.withUnsafeMutableBufferPointer { valuesPointer in
+                ngt_batch_insert_index(index, valuesPointer.baseAddress, UInt32(count), idsPointer.baseAddress, error)
             }
         }
+
+        createIndex(numOfThreads)
+
+        return ids
     }
 
     public func remove(id: UInt32) {
-        ngt_remove_index(index, id, nil)
+        ngt_remove_index(index, id, error)
     }
 
     public func search(query: [Double], size: Int, epsilon: Float = 0.1, radius: Float = -1.0) -> [ObjectDistance] {
-        let results = ngt_create_empty_results(nil)
+        let results = ngt_create_empty_results(error)
         var query = query
         _ = query.withUnsafeMutableBufferPointer { bufferPointer in
             ngt_search_index(index, bufferPointer.baseAddress, Int32(bufferPointer.count), size, epsilon, radius, results, error)
