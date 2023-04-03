@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "openmp",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/siuying/OpenMP",
+      "state" : {
+        "branch" : "master",
+        "revision" : "48000ac26402e06f17cea1e5e5cdc2a9e1572ce7"
+      }
+    }
+  ],
+  "version" : 2
+}

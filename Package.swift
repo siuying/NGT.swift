@@ -6,13 +6,16 @@ import PackageDescription
 let package = Package(
     name: "NGT",
     platforms: [
-        .macOS(.v10_15),
+        .macOS(.v11),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "NGT",
             targets: ["NGT"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/siuying/OpenMP", branch: "master")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -23,27 +26,25 @@ let package = Package(
         ),
         .target(
             name: "CNGT",
-            dependencies: [],
+            dependencies: ["OpenMP"],
             cSettings: [
-                .headerSearchPath("../../vendor/openmp/include"),
                 .headerSearchPath("lib"),
                 .headerSearchPath("extra_include"),
                 .unsafeFlags(["-DNGT_QBG_DISABLED=1"]) // disable NGT with Quantization
             ],
             cxxSettings: [
-                .headerSearchPath("../../vendor/openmp/include"),
                 .headerSearchPath("lib"),
                 .headerSearchPath("extra_include"),
                 .unsafeFlags(["-DNGT_QBG_DISABLED=1"]) // disable NGT with Quantization
             ],
             linkerSettings: [
-                .unsafeFlags(["-Lvendor/openmp/lib", "-lomp"], .when(platforms: [.macOS], configuration: .release)),
                 .linkedFramework("Accelerate")
             ]
         ),
         .testTarget(
             name: "NGTTests",
-            dependencies: ["NGT"]),
+            dependencies: ["NGT"]
+        ),
     ],
     cxxLanguageStandard: CXXLanguageStandard.cxx11
 )
