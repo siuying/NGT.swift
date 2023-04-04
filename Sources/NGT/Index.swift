@@ -27,8 +27,8 @@ public class Index {
     public typealias ObjectId = UInt32
 
     public struct ObjectDistance {
-        let id: ObjectId
-        let distant: Float
+        public let id: ObjectId
+        public let distant: Float
     }
 
     private var index: NGTIndex!
