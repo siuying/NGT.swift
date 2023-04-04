@@ -13,6 +13,7 @@ let package = Package(
         .library(
             name: "NGT",
             targets: ["NGT"]),
+        .library(name: "CNGT")
     ],
     dependencies: [
         .package(url: "https://github.com/siuying/OpenMP", branch: "master")
