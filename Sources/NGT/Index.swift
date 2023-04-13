@@ -1,4 +1,5 @@
 import CNGT
+import Foundation
 
 public class Index {
     public enum ObjectType: Int {
@@ -29,6 +30,11 @@ public class Index {
     public struct ObjectDistance {
         public let id: ObjectId
         public let distant: Float
+    }
+
+    public enum Error: Swift.Error, LocalizedError {
+        case invalidDimension
+        case unexpected(String)
     }
 
     private var index: NGTIndex!
@@ -133,33 +139,59 @@ public class Index {
         }
     }
 
-    public func insert(_ values: [Double]) -> UInt32 {
+    public func insert(_ values: [Double]) throws -> UInt32 {
+        if values.count != dimension {
+            throw Error.invalidDimension
+        }
+
         var values = values
-        return values.withUnsafeMutableBufferPointer { bufferPointer in
+        let result = values.withUnsafeMutableBufferPointer { bufferPointer in
             ngt_insert_index(index, bufferPointer.baseAddress, UInt32(bufferPointer.count), nil)
         }
+
+        try checkAndThrowIfNeeded()
+
+        return result
     }
 
-    public func batchInsert(_ values: [[Double]], numOfThreads: UInt32 = 1) -> [ObjectId] {
+    public func batchInsert(_ values: [[Double]], numOfThreads: UInt32 = 1) throws -> [ObjectId] {
+        // validate inputs
+        for value in values {
+            if value.count != dimension {
+                throw Error.invalidDimension
+            }
+        }
+
         let count = values.count
         var ids: [UInt32] = Array(repeating: 0, count: values.count)
+
         var values: [Float] = values.flatMap { $0 }.map { Float($0) } // flatten array
         _ = ids.withUnsafeMutableBufferPointer { idsPointer in
             return values.withUnsafeMutableBufferPointer { valuesPointer in
                 ngt_batch_insert_index(index, valuesPointer.baseAddress, UInt32(count), idsPointer.baseAddress, error)
             }
         }
+        if let error = errorString, !error.isEmpty {
+            throw Error.unexpected(error)
+        }
 
-        createIndex(numOfThreads)
+        try createIndex(numOfThreads)
+        try checkAndThrowIfNeeded()
 
         return ids
     }
 
-    public func remove(id: UInt32) {
+    public func remove(id: UInt32) throws {
         ngt_remove_index(index, id, error)
+
+        try checkAndThrowIfNeeded()
     }
 
-    public func search(query: [Double], size: Int, epsilon: Float = 0.1, radius: Float = -1.0) -> [ObjectDistance] {
+    public func search(query: [Double], size: Int = 3, epsilon: Float = 0.1, radius: Float = -1.0) throws -> [ObjectDistance] {
+        if query.count != dimension {
+            throw Error.invalidDimension
+        }
+
         let results = ngt_create_empty_results(error)
         var query = query
         _ = query.withUnsafeMutableBufferPointer { bufferPointer in
@@ -171,6 +203,9 @@ public class Index {
             let res = ngt_get_result(results, index, error)
             distances.append(ObjectDistance(id: res.id, distant: res.distance))
         }
+
+        try checkAndThrowIfNeeded()
+
         return distances
     }
 
@@ -184,8 +219,10 @@ public class Index {
         ngt_close_index(index)
     }
 
-    public func createIndex(_ numOfThreads: UInt32 = 4) {
+    public func createIndex(_ numOfThreads: UInt32 = 4) throws {
         ngt_create_index(index, numOfThreads, error)
+
+        try checkAndThrowIfNeeded()
     }
 
     public func objectAsInt(_ id: ObjectID) -> UInt8? {
@@ -215,5 +252,12 @@ public class Index {
         ngt_destroy_error_object(error)
         ngt_close_index(index)
         ngt_destroy_property(property)
+    }
+
+    private func checkAndThrowIfNeeded() throws {
+        if let errorString = errorString, !errorString.isEmpty {
+            ngt_clear_error_string(error)
+            throw Error.unexpected(errorString)
+        }
     }
 }
