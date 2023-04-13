@@ -40,7 +40,7 @@ public class Index {
     private var index: NGTIndex!
     private var property: NGTProperty!
     private var error: NGTError!
-    public let path: String?
+    public var path: String?
 
     public init(dimensions: Int32?, path: String? = nil, edgeSizeForCreation: Int = 10, edgeSizeForSearch: Int = 40, objectType: ObjectType = .float, distanceType: DistanceType = .l2) {
         let error = ngt_create_error_object()
@@ -209,10 +209,14 @@ public class Index {
         return distances
     }
 
-    public func save(path: String) -> Bool {
-        path.withCString { cString in
+    @discardableResult
+    public func save(path: String) throws -> Bool {
+        let result = path.withCString { cString in
             ngt_save_index(index, cString, error)
         }
+        try checkAndThrowIfNeeded()
+        self.path = path
+        return result
     }
 
     public func close() {

@@ -1,7 +1,7 @@
 import XCTest
 @testable import NGT
 
-final class NGTTests: XCTestCase {
+final class IndexTests: XCTestCase {
     func testBasic() throws {
         let objects: [[Double]] = [
             [1, 1, 2, 1],
