@@ -7,7 +7,7 @@ let package = Package(
     name: "NGT",
     platforms: [
         .macOS(.v13),
-        .iOS(.v13)
+        .iOS(.v11)
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
