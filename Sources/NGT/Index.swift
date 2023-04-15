@@ -42,71 +42,89 @@ public class Index {
     private var error: NGTError!
     public var path: String?
 
-    public init(dimensions: Int32?, path: String? = nil, edgeSizeForCreation: Int = 10, edgeSizeForSearch: Int = 40, objectType: ObjectType = .float, distanceType: DistanceType = .l2) {
-        let error = ngt_create_error_object()
-
-        if let path = path, dimensions == nil {
-            index = path.withCString { cString in
-                ngt_open_index(cString, error)
-            }
-            property = ngt_create_property(error)
-        } else if let dimensions = dimensions {
-            let property = ngt_create_property(error)
-            ngt_set_property_dimension(property, dimensions, error)
-            ngt_set_property_edge_size_for_creation(property, Int16(edgeSizeForCreation), error)
-            ngt_set_property_edge_size_for_search(property, Int16(edgeSizeForSearch), error)
-
-            switch objectType {
-            case .float:
-                ngt_set_property_object_type_float(property, error)
-            case .float16:
-                ngt_set_property_object_type_float16(property, error)
-            case .integer:
-                ngt_set_property_object_type_integer(property, error)
-            case .none:
-                fatalError()
-            }
-
-            switch distanceType {
-            case .l1:
-                ngt_set_property_distance_type_l1(property, error)
-            case .l2:
-                ngt_set_property_distance_type_l2(property, error)
-            case .angle:
-                ngt_set_property_distance_type_angle(property, error)
-            case .hamming:
-                ngt_set_property_distance_type_hamming(property, error)
-            case .jaccard:
-                ngt_set_property_distance_type_jaccard(property, error)
-            case .cosine:
-                ngt_set_property_distance_type_cosine(property, error)
-            case .sparseJaccard:
-                ngt_set_property_distance_type_sparse_jaccard(property, error)
-            case .lorentz:
-                ngt_set_property_distance_type_lorentz(property, error)
-            case .normalizedL2:
-                ngt_set_property_distance_type_normalized_l2(property, error)
-            case .normalizedAngle:
-                ngt_set_property_distance_type_normalized_angle(property, error)
-            case .normalizedCosine:
-                ngt_set_property_distance_type_normalized_cosine(property, error)
-            case .poincare:
-                ngt_set_property_distance_type_poincare(property, error)
-            case .none:
-                fatalError()
-            }
-
-            if let path = path {
-                index = path.withCString { pathCString in
-                    ngt_create_graph_and_tree(pathCString, property, error)
-                }
-            } else {
-                index = ngt_create_graph_and_tree_in_memory(property, error)
-            }
-            self.property = property
-        }
+    public init(path: String) throws {
+        error = ngt_create_error_object()
         self.path = path
-        self.error = error
+        index = path.withCString { cString in
+            ngt_open_index(cString, error)
+        }
+        property = ngt_create_property(error)
+        try checkAndThrowIfNeeded()
+
+        ngt_get_property(index, property, error)
+        try checkAndThrowIfNeeded()
+    }
+
+    init(dimensions: Int32, edgeSizeForCreation: Int = 10, edgeSizeForSearch: Int = 40, objectType: ObjectType = .float, distanceType: DistanceType = .l2) throws {
+        error = ngt_create_error_object()
+
+        let property = ngt_create_property(error)
+        try checkAndThrowIfNeeded()
+
+        ngt_set_property_dimension(property, dimensions, error)
+        try checkAndThrowIfNeeded()
+
+        ngt_set_property_edge_size_for_creation(property, Int16(edgeSizeForCreation), error)
+        try checkAndThrowIfNeeded()
+
+        ngt_set_property_edge_size_for_search(property, Int16(edgeSizeForSearch), error)
+        try checkAndThrowIfNeeded()
+
+        switch objectType {
+        case .float:
+            ngt_set_property_object_type_float(property, error)
+        case .float16:
+            ngt_set_property_object_type_float16(property, error)
+        case .integer:
+            ngt_set_property_object_type_integer(property, error)
+        case .none:
+            fatalError()
+        }
+        try checkAndThrowIfNeeded()
+
+        switch distanceType {
+        case .l1:
+            ngt_set_property_distance_type_l1(property, error)
+        case .l2:
+            ngt_set_property_distance_type_l2(property, error)
+        case .angle:
+            ngt_set_property_distance_type_angle(property, error)
+        case .hamming:
+            ngt_set_property_distance_type_hamming(property, error)
+        case .jaccard:
+            ngt_set_property_distance_type_jaccard(property, error)
+        case .cosine:
+            ngt_set_property_distance_type_cosine(property, error)
+        case .sparseJaccard:
+            ngt_set_property_distance_type_sparse_jaccard(property, error)
+        case .lorentz:
+            ngt_set_property_distance_type_lorentz(property, error)
+        case .normalizedL2:
+            ngt_set_property_distance_type_normalized_l2(property, error)
+        case .normalizedAngle:
+            ngt_set_property_distance_type_normalized_angle(property, error)
+        case .normalizedCosine:
+            ngt_set_property_distance_type_normalized_cosine(property, error)
+        case .poincare:
+            ngt_set_property_distance_type_poincare(property, error)
+        case .none:
+            fatalError()
+        }
+        try checkAndThrowIfNeeded()
+
+        if let path = path {
+            index = path.withCString { pathCString in
+                ngt_create_graph_and_tree(pathCString, property, error)
+            }
+            try checkAndThrowIfNeeded()
+        } else {
+            index = ngt_create_graph_and_tree_in_memory(property, error)
+            try checkAndThrowIfNeeded()
+        }
+        self.property = property
+
+        ngt_get_property(index, property, error)
+        try checkAndThrowIfNeeded()
     }
 
     public var dimension: Int {

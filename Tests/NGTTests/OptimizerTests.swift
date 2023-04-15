@@ -21,7 +21,7 @@ final class OptimizerTests: XCTestCase {
             [5, 4, 6, 5],
             [1, 2, 1, 2]
         ]
-        let index = Index(dimensions: 4)
+        let index = try Index(dimensions: 4)
         _ = try index.batchInsert(objects)
         _ = try index.save(path: indexPath)
         XCTAssertTrue(FileManager.default.fileExists(atPath: indexPath))

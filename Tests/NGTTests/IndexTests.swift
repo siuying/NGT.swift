@@ -8,7 +8,7 @@ final class IndexTests: XCTestCase {
             [5, 4, 6, 5],
             [1, 2, 1, 2]
         ]
-        let index = Index(dimensions: 4)
+        let index = try Index(dimensions: 4)
         XCTAssertEqual(Index.DistanceType.l2, index.distanceType)
         XCTAssertEqual(10, index.edgeSizeForCreation)
         XCTAssertEqual(40, index.edgeSizeForSearch)
@@ -34,7 +34,7 @@ final class IndexTests: XCTestCase {
           [1, 2, 1, 2],
         ]
 
-        let index = Index(dimensions: 4, distanceType: .cosine)
+        let index = try Index(dimensions: 4, distanceType: .cosine)
         let ids = try index.batchInsert(objects)
         XCTAssertEqual([1, 2, 3], ids)
 
@@ -49,7 +49,7 @@ final class IndexTests: XCTestCase {
           [1, 2, 1, 2],
         ]
 
-        let index = Index(dimensions: 4, distanceType: .cosine)
+        let index = try Index(dimensions: 4, distanceType: .cosine)
         let ids = try index.batchInsert(objects)
         XCTAssertEqual([1, 2, 3], ids)
 
@@ -64,7 +64,7 @@ final class IndexTests: XCTestCase {
           [1, 2, 1, 2],
         ]
 
-        let index = Index(dimensions: 4, distanceType: .cosine)
+        let index = try Index(dimensions: 4, distanceType: .cosine)
         let ids = try index.batchInsert(objects)
         XCTAssertEqual([1, 2, 3], ids)
 
@@ -78,7 +78,7 @@ final class IndexTests: XCTestCase {
             [5, 4, 6, 5],
             [1, 2, 1, 2]
         ]
-        let index = Index(dimensions: 4, distanceType: .cosine)
+        let index = try Index(dimensions: 4, distanceType: .cosine)
         XCTAssertEqual([1, 2, 3], try index.batchInsert(objects))
 
         try index.remove(id: 3)
@@ -102,12 +102,12 @@ final class IndexTests: XCTestCase {
     }
 
     func testEmpty() throws {
-        let index = Index(dimensions: 3)
+        let index = try Index(dimensions: 3)
         XCTAssertEqual([], try index.batchInsert([]))
     }
 
     func testInsertBadDimensions() throws {
-        let index = Index(dimensions: 3)
+        let index = try Index(dimensions: 3)
         do {
             _ = try index.insert([1, 2])
             XCTFail("expected to throw")
@@ -117,7 +117,7 @@ final class IndexTests: XCTestCase {
     }
 
     func testBatchInsertBadDimensions() throws {
-        let index = Index(dimensions: 3)
+        let index = try Index(dimensions: 3)
         do {
             _ = try index.batchInsert([[1, 2]])
             XCTFail("expected to throw")
@@ -127,7 +127,7 @@ final class IndexTests: XCTestCase {
     }
 
     func testSearchBadDimensions() throws {
-        let index = Index(dimensions: 3)
+        let index = try Index(dimensions: 3)
         _ = try index.insert([1, 2, 3])
         do {
             _ = try index.search(query: [1,2])
@@ -135,5 +135,19 @@ final class IndexTests: XCTestCase {
         } catch Index.Error.invalidDimension {
             // expected
         }
+    }
+
+    func testSaveAndLoad() throws {
+        let folder = FileManager.default.temporaryDirectory.appending(component: "IndexTestsSaveLoad")
+
+        let index: Index! = try Index(dimensions: 3)
+        _ = try index.batchInsert([[1, 2, 3]])
+        try index.save(path: folder.path)
+        let result1 = try index.search(query: [1, 2, 3], size: 1)
+        XCTAssertEqual([UInt32(1)], result1.map { $0.id })
+
+        let index2 = try Index(path: folder.path)
+        let result2 = try index2.search(query: [1, 2, 3], size: 1)
+        XCTAssertEqual([UInt32(1)], result2.map { $0.id })
     }
 }
