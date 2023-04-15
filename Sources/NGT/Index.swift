@@ -55,7 +55,7 @@ public class Index {
         try checkAndThrowIfNeeded()
     }
 
-    init(dimensions: Int32, edgeSizeForCreation: Int = 10, edgeSizeForSearch: Int = 40, objectType: ObjectType = .float, distanceType: DistanceType = .l2) throws {
+    public init(dimensions: Int32, edgeSizeForCreation: Int = 10, edgeSizeForSearch: Int = 40, objectType: ObjectType = .float, distanceType: DistanceType = .l2) throws {
         error = ngt_create_error_object()
 
         let property = ngt_create_property(error)
