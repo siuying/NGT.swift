@@ -138,15 +138,15 @@ final class IndexTests: XCTestCase {
     }
 
     func testSaveAndLoad() throws {
-        let folder = FileManager.default.temporaryDirectory.appending(component: "IndexTestsSaveLoad")
+        let folder = FileManager.default.temporaryDirectory.path.appending("IndexTestsSaveLoad")
 
         let index: Index! = try Index(dimensions: 3)
         _ = try index.batchInsert([[1, 2, 3]])
-        try index.save(path: folder.path)
+        try index.save(path: folder)
         let result1 = try index.search(query: [1, 2, 3], size: 1)
         XCTAssertEqual([UInt32(1)], result1.map { $0.id })
 
-        let index2 = try Index(path: folder.path)
+        let index2 = try Index(path: folder)
         let result2 = try index2.search(query: [1, 2, 3], size: 1)
         XCTAssertEqual([UInt32(1)], result2.map { $0.id })
     }

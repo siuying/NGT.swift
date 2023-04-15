@@ -2,20 +2,20 @@ import XCTest
 @testable import NGT
 
 final class OptimizerTests: XCTestCase {
-    var testFolder: URL!
+    var testFolder: String!
 
     override func setUpWithError() throws {
-        testFolder = FileManager.default.temporaryDirectory.appending(component: "OptimizerTests")
-        try FileManager.default.createDirectory(atPath: testFolder.path(), withIntermediateDirectories: true)
+        testFolder = FileManager.default.temporaryDirectory.path.appending("OptimizerTests")
+        try FileManager.default.createDirectory(atPath: testFolder, withIntermediateDirectories: true)
     }
 
     override func tearDownWithError() throws {
         guard let testFolder = testFolder else { return }
-        _ = try? FileManager.default.removeItem(at: testFolder)
+        _ = try? FileManager.default.removeItem(atPath: testFolder)
     }
 
     func testOptimize() throws {
-        let indexPath = testFolder.appending(component: "index").path()
+        let indexPath = testFolder.appending("index")
         let objects: [[Double]] = [
             [1, 1, 2, 1],
             [5, 4, 6, 5],
@@ -27,10 +27,10 @@ final class OptimizerTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: indexPath))
 
         // create temporary folder
-        let optimizerURL = testFolder.appending(component: "optimized")
+        let optimizerPath = testFolder.appending("optimized")
         let optimizer = Optimizer(queries: 1)
         try optimizer.adjustSearchCoefficients(index: index)
-        try optimizer.execute(inIndex: index, outIndexPath: optimizerURL.path())
-        XCTAssertTrue(FileManager.default.fileExists(atPath: optimizerURL.path()))
+        try optimizer.execute(inIndex: index, outIndexPath: optimizerPath)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: optimizerPath))
     }
 }
